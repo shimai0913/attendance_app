@@ -17,7 +17,7 @@
 ## django-rest-swaggerでのエラー
 `/venv/lib/python3.8/site-packages/rest_framework_swagger/templates/rest_framework_swagger/index.html`
 
-~~{% load staticfiles %}~~  =>  {% load static %}
+~~{% load staticfiles %}~~     =>     {% load static %}
 
 ## マイグレーション
 `python manage.py migrate`
