@@ -8,6 +8,7 @@
 
 ## Pythonパッケージのインストール
 `python -m pip install --upgrade pip setuptools`
+
 `python -m pip install django djangorestframework python-dotenv django-cors-headers django-rest-auth django-allauth coreapi PyYAML django-rest-swagger`
 
 ## admin作成
@@ -15,7 +16,9 @@
 
 ## django-rest-swaggerでのエラー
 `/venv/lib/python3.8/site-packages/rest_framework_swagger/templates/rest_framework_swagger/index.html`
+
 ~~{% load staticfiles %}~~
+
 {% load static %}
 
 ## マイグレーション
