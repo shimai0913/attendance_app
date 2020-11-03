@@ -9,7 +9,8 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
-
+import os
+import environ
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -149,3 +150,17 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+# Read Environment Variables (Added)
+env = environ.Env()
+env.read_env('.env')
+SSH_BASTION_ADDRESS = env("SSH_BASTION_ADDRESS")
+SSH_PORT = env("SSH_PORT")
+SSH_USER = env("SSH_USER")
+SSH_PKEY_PATH = env("SSH_PKEY_PATH")
+MYSQL_HOST = env("MYSQL_HOST")
+MYSQL_PORT = env("MYSQL_PORT")
+MYSQL_USER = env("MYSQL_USER")
+MYSQL_PASS = env("MYSQL_PASS")
+MYSQL_DB = env("MYSQL_DB")

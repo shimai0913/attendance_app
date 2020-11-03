@@ -11,6 +11,9 @@
 
 `python -m pip install django djangorestframework python-dotenv django-cors-headers django-rest-auth django-allauth coreapi PyYAML django-rest-swagger`
 
+`python -m pip install sshtunnel PyMySQL pandas`
+sshtunnel PyMySQL pandas
+
 ## admin作成
 `python manage.py createsuperuser`
 

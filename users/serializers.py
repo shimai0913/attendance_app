@@ -15,6 +15,6 @@ class UserSerializer(serializers.ModelSerializer):
             # 'full_name',
             'phone_number',
             'email',
-            'user_id',
+            'employee_id',
             )
         # fields = '__all__'
