@@ -56,10 +56,10 @@ class User(AbstractBaseUser, PermissionsMixin):
             'unique': _("A user with that username already exists."),
         },
     )
-    user_id = models.IntegerField(
+    employee_id = models.IntegerField(
         _('社員ID'),
         unique=True, error_messages={
-            'unique': _("A user with that user_id already exists."),
+            'unique': _("A user with that employee_id already exists."),
         },
         null=True, blank=True
     )
@@ -117,3 +117,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     def email_user(self, subject, message, from_email=None, **kwargs):
         """Send an email to this user."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
+
+    def get_employee_id(self):
+        return self.employee_id

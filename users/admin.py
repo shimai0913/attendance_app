@@ -11,10 +11,10 @@ class AdminUserAdmin(UserAdmin):
 
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        (_('Personal info'), {'fields': ('first_name', 'last_name', 'gender', 'birthday', 'phone_number', 'email','user_id')}),
+        (_('Personal info'), {'fields': ('first_name', 'last_name', 'gender', 'birthday', 'phone_number', 'email','employee_id')}),
         (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser','groups', 'user_permissions')}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
     )
-    list_display = ('username', 'user_id', 'first_name', 'last_name', 'is_staff')
-    search_fields = ('username', 'user_id', 'first_name', 'last_name', 'email')
+    list_display = ('username', 'employee_id', 'first_name', 'last_name', 'is_staff')
+    search_fields = ('username', 'employee_id', 'first_name', 'last_name', 'email')
     filter_horizontal = ('groups', 'user_permissions')

@@ -8,7 +8,7 @@ class AttendanceSerializer(serializers.ModelSerializer):
         model = Attendance
         fields = (
           'id',
-          'user_id',
+          'employee_id',
         #   'attendance_id',
           'work_type',
           'opening_time',

@@ -1,10 +1,28 @@
+# coding: utf-8
+
+# ////////////////////////////////////////////////////////////////////////// #
+#
+#  モジュールインポート
+#
+# ////////////////////////////////////////////////////////////////////////// #
+import sys, os
+sys.path.append(os.path.join('..', 'rakudasu_project'))
+# ------------------------------
+#  オリジナルモジュール
+# ------------------------------
+sys.path.append(os.path.join('..', 'lib'))
+from lib import rakudasu_db
+# ////////////////////////////////////////////////////////////////////////// #
+#
+#  Django モジュールインポート
+#
+# ////////////////////////////////////////////////////////////////////////// #
 from rest_framework import generics, viewsets
 from .models import Attendance
 from .serializers import AttendanceSerializer
 
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-
 
 # class AttendanceViewSet(viewsets.ModelViewSet):
 class AttendanceList(generics.ListCreateAPIView):
@@ -14,28 +32,60 @@ class AttendanceList(generics.ListCreateAPIView):
     # GET
     def list(self, request):
         # Note the use of `get_queryset()` instead of `self.queryset`
-        queryset = self.get_queryset().filter(user_id=request.user.id)
-        serializer = AttendanceSerializer(queryset, many=True)
-        return Response(serializer.data)
-
-    # POST
-    def create(self, request):
-        request_data = request.data
-        request_data['user_id'] = request.user.id
-        serializer = self.get_serializer(data=request_data)
-        if serializer.is_valid():
-            self.object = serializer.save()
-            headers = self.get_success_headers(serializer.data)
-            return Response({
-                'result': 'Successed',
-                'message': 'Registration to the RAKUDASU is complete.',
-                'data': serializer.data
-            }, status=200, headers=headers)
+        employee_id = request.user.get_employee_id()
+        if employee_id:
+            queryset = self.get_queryset().filter(employee_id=employee_id)
+            serializer = AttendanceSerializer(queryset, many=True)
+            return Response(serializer.data)
         else:
             return Response({
                 'result': 'Failed',
-                'message': 'Registration to RAKUDASU failed.',
-                'Reason': serializer.errors
+                'message': 'Employee ID is not registered. Please try after registering your Employee ID.',
+            }, status=400)
+
+    # POST
+    def create(self, request):
+        print('-'*60, 'POST request.','-'*60)
+        employee_id = request.user.get_employee_id()
+        if employee_id:
+            # ========================================================================== #
+            #  本家RAKUDASUに対する処理
+            # ========================================================================== #
+            try:
+                rakudasu = rakudasu_db.Rakudasu(request)
+                assert not rakudasu.get_userInfo()
+                assert not rakudasu.get_latestAttendanceId()
+                assert not rakudasu.calculate_working_hours()
+                assert not rakudasu.commit_data()
+            except Exception as e:
+                print(e)
+            # ========================================================================== #
+            #  Django Modelに対する処理
+            # ========================================================================== #
+            request_data = dict(request.data)
+            request_data['employee_id'] = employee_id
+            serializer = self.get_serializer(data=request_data)
+            if serializer.is_valid():
+                self.object = serializer.save()
+                headers = self.get_success_headers(serializer.data)
+                return Response({
+                    'result': 'Successed',
+                    'message': 'Registration to the RAKUDASU is complete.',
+                    'data': serializer.data
+                }, status=200, headers=headers)
+            else:
+                return Response({
+                    'result': 'Failed',
+                    'message': 'Registration to RAKUDASU failed.',
+                    'reason': serializer.errors
+                }, status=400)
+        # ---------------------
+        # employee_id 未登録
+        # ---------------------
+        else:
+            return Response({
+                'result': 'Failed',
+                'message': 'Employee ID is not registered. Please try after registering your Employee ID.',
             }, status=400)
 
 # class AttendanceViewSet(viewsets.ModelViewSet):
@@ -65,7 +115,7 @@ class AttendanceDetail(generics.RetrieveUpdateDestroyAPIView):
             return Response({
                 'result': 'Failed',
                 'message': 'Failed to update attendance information.',
-                'Reason': serializer.errors
+                'reason': serializer.errors
             }, status=400)
 
     # PATCH

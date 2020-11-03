@@ -8,7 +8,8 @@ class Attendance(models.Model):
         (1,'SES'), (2,'派遣'), (3,'社内業務'), (4,'出勤予定'), (5,'受託'), (6,'内勤'),
     )
 
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    # employee_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    employee_id = models.IntegerField(_('社員ID'))
     # attendance_id = models.IntegerField(_('Attendance ID'),)
     work_type = models.IntegerField(_('種別'), choices=WORKTYPE_CHOICES)
     opening_time = models.TimeField(_('始業時間'),)
@@ -26,4 +27,4 @@ class Attendance(models.Model):
     #   return working_hours
 
     def __int__(self):
-        return self.user_id
+        return self.employee_id
