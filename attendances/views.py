@@ -34,16 +34,9 @@ class AttendanceList(generics.ListCreateAPIView):
         # Note the use of `get_queryset()` instead of `self.queryset`
         employee_id = request.user.get_employee_id()
         user_fullname = request.user.get_full_name()
-        print('fullName: ', user_fullname)
-        if employee_id:
-            queryset = self.get_queryset().filter(employee_id=employee_id)
-            serializer = AttendanceSerializer(queryset, many=True)
-            return Response(serializer.data)
-        else:
-            return Response({
-                'result': 'Failed',
-                'message': 'Employee ID is not registered. Please try after registering your Employee ID.',
-            }, status=400)
+        queryset = self.get_queryset().filter(employee_id=employee_id)
+        serializer = AttendanceSerializer(queryset, many=True)
+        return Response(serializer.data)
 
     # POST
     def create(self, request):
