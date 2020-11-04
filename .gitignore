@@ -134,4 +134,5 @@ rakudasu_project_nginx.conf
 rakudasu_project_uwsgi.ini
 static/
 uwsgi_params
+deploy.sh
 
