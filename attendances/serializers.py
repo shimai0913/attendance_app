@@ -19,5 +19,6 @@ class AttendanceSerializer(serializers.ModelSerializer):
           'created_at',
           'updated_at',
           # 'deleted',
+          'attendance_details_id',
         )
         # fields = '__all__'

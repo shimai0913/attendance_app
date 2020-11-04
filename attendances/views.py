@@ -40,57 +40,65 @@ class AttendanceList(generics.ListCreateAPIView):
 
     # POST
     def create(self, request):
-        print('-'*60, 'POST request.','-'*60)
+        request_data = dict(request.data)
         employee_id = request.user.get_employee_id()
-        if employee_id:
-            to_RAKUDASU_flag = False
-            # ========================================================================== #
-            #  本家RAKUDASUに対する処理
-            # ========================================================================== #
-            try:
-                rakudasu = rakudasu_db.Rakudasu(request)
-                user_fullname = request.user.get_full_name()
-                assert not rakudasu.get_userInfo()
-                assert not rakudasu.check_info(user_fullname)
-                assert not rakudasu.get_latestAttendanceId()
-                assert not rakudasu.calculate_working_hours()
-                assert not rakudasu.commit_data()
-                to_RAKUDASU_flag = True
-            except Exception as e:
-                pass
-            # ========================================================================== #
-            #  Django Modelに対する処理
-            # ========================================================================== #
-            if to_RAKUDASU_flag:
-                request_data = dict(request.data)
-                request_data['employee_id'] = employee_id
-                serializer = self.get_serializer(data=request_data)
-                if serializer.is_valid():
-                    self.object = serializer.save()
-                    headers = self.get_success_headers(serializer.data)
-                    return Response({
-                        'result': 'Successed',
-                        'message': 'Registration to the RAKUDASU and Django models are complete.',
-                        'data': serializer.data
-                    }, status=200, headers=headers)
+        request_data['employee_id'] = employee_id
+        serializer = self.get_serializer(data=request_data)
+        if serializer.is_valid():
+            # employee_id, user_fullname の登録確認
+            user_fullname = request.user.get_full_name()
+            if employee_id and user_fullname:
+                # ========================================================================== #
+                #  本家RAKUDASUに対する処理
+                # ========================================================================== #
+                try:
+                    rakudasu = rakudasu_db.Rakudasu(request)
+                    assert not rakudasu.get_userInfo(), 'Failed to get user information with this employee ID.'
+                    assert not rakudasu.check_info(user_fullname), 'This name did not match. Please check your registration information.'
+                    assert not rakudasu.get_latestAttendanceId(), 'Failed to get attendance ID.'
+                    assert not rakudasu.check_attendance_details(), 'This work type data already exists.'
+                    assert not rakudasu.calculate_working_hours(), 'Failed to calculate working hours.'
+                    assert not rakudasu.commit_data(), 'Failed to commit request data.'
+                    attendance_detailsId = rakudasu.get_attendance_detailsId()
+                    if not attendance_detailsId:
+                        raise Exception('Failed to get attendance_details_id.')
+                except Exception as e:
+                    message = str(e)
+                    return Response({'result': 'Failed', 'message': message, 'data': request_data}, status=400)
                 else:
-                    return Response({
-                        'result': 'Failed',
-                        'message': 'Registration to RAKUDASU failed.',
-                        'reason': serializer.errors
-                    }, status=400)
+                    # ========================================================================== #
+                    #  Django Modelに対する処理
+                    # ========================================================================== #
+                    request_data['attendance_details_id'] = attendance_detailsId
+                    serializer = self.get_serializer(data=request_data)
+                    if serializer.is_valid():
+                        self.object = serializer.save()
+                        headers = self.get_success_headers(serializer.data)
+                        return Response({
+                            'result': 'Successed',
+                            'message': 'Registration to the RAKUDASU and Django models are complete.',
+                            'data': serializer.data
+                        }, status=200, headers=headers)
+                    else:
+                        return Response({
+                            'result': 'Failed',
+                            'message': 'Registration to Django models failed.',
+                            'reason': serializer.errors
+                        }, status=400)
+            # ---------------------
+            # employee_id or firstname or lastname 未登録
+            # ---------------------
             else:
-                return Response({
-                    'result': 'Failed',
-                    'message': 'Your fullname is not registered. Please try after registering your first name and last name.',
-                }, status=400)
+                message = 'Employee ID or fullname is not registered. Please try after registering.'
+                return Response({'result': 'Failed', 'message': message}, status=400)
         # ---------------------
-        # employee_id 未登録
+        # serializer validation error
         # ---------------------
         else:
             return Response({
                 'result': 'Failed',
-                'message': 'Employee ID is not registered. Please try after registering your Employee ID.',
+                'message': 'Registration to Django models failed.',
+                'reason': serializer.errors
             }, status=400)
 
 # class AttendanceViewSet(viewsets.ModelViewSet):

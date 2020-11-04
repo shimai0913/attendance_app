@@ -43,6 +43,7 @@ work_type_Map = {
     4: 12, # 出勤予定
     5: 13, # 受託
     6: 20, # 内勤
+    None: '',
 }
 
 # ////////////////////////////////////////////////////////////////////////// #
@@ -274,6 +275,42 @@ class Rakudasu:
             return 1
 
     # ====================================================================== #
+    #  関数名: check_attendance_details
+    # ---------------------------------------------------------------------- #
+    #  説明: 登録済みのデータを確認
+    #  返り値: int
+    # ====================================================================== #
+    def check_attendance_details(self):
+        self.def_name = "check_attendance_details"
+        description = f'Processing of "{self.def_name}" function is started.'
+        self.printLog("INFO", f'[ OK ] {description}')
+
+        # メインコード
+        try:
+            sql = f'select * from attendance_details where user_id={self.employee_id} and attendance_id={self.latestAttendanceId} and work_type={self.work_type} and date="{self.date}" and deleted is NULL;'
+            df = self.select(sql)
+            if len(df) == 0:
+                pass
+            else:
+                raise Exception('This work type data already exists.')
+
+            # ログ作業後処理
+            message = f'"get_latestAttendanceId" completed.'
+            self.printLog("INFO", f"[ OK ] {message}")
+
+            return 0
+        # ---------------------
+        # エラーが発生した場合
+        # ---------------------
+        except Exception as e:
+            message = f'{traceback.print_exc}'
+            if e:
+                message = e
+            self.printLog("FATAL", f'!!!!!===== Exception =====!!!!!')
+            self.printLog("FATAL", f'{message}')
+            return 1
+
+    # ====================================================================== #
     #  関数名: calculate_working_hours
     # ---------------------------------------------------------------------- #
     #  説明: 仕事時間計算
@@ -360,16 +397,6 @@ class Rakudasu:
             message = f'"commit_data" completed.'
             self.printLog("INFO", f"[ OK ] {message}")
 
-            print('-'*60)
-            print('user_id         : ', self.employee_id)
-            print('attendance_id   : ', self.latestAttendanceId)
-            print('work_type       : ', self.work_type)
-            print('opening_time    : ', self.opening_time)
-            print('closing_time    : ', self.closing_time)
-            print('break_time      : ', self.break_time)
-            print('working_hours   : ', self.working_hours)
-            print('date            : ', self.date)
-            print('-'*60)
             return 0
         # ---------------------
         # エラーが発生した場合
@@ -381,6 +408,44 @@ class Rakudasu:
             self.printLog("FATAL", f'!!!!!===== Exception =====!!!!!')
             self.printLog("FATAL", f'{message}')
             return 1
+
+    # ====================================================================== #
+    #  関数名: get_attendance_detailsId
+    # ---------------------------------------------------------------------- #
+    #  説明: 登録した勤怠データのIDを取得
+    #  返り値: int
+    # ====================================================================== #
+    def get_attendance_detailsId(self):
+        self.def_name = "get_attendance_detailsId"
+        description = f'Processing of "{self.def_name}" function is started.'
+        self.printLog("INFO", f'[ OK ] {description}')
+
+        # メインコード
+        try:
+            # created_at を使うのはめんどくさそう => and複数で無理やり
+            sql = f'select * from attendance_details where user_id={self.employee_id} and attendance_id={self.latestAttendanceId} and work_type={self.work_type} and date="{self.date}" and deleted is NULL;'
+            df = self.select(sql)
+            if len(df) == 1:
+                self.attendance_detailsId = df.at[0, 'id']
+            else:
+                raise Exception('Failed to get attendance_details_id.')
+
+            # ログ作業後処理
+            message = f'"get_attendance_detailsId" completed.'
+            self.printLog("INFO", f"[ OK ] {message}")
+
+            return int(self.attendance_detailsId)
+        # ---------------------
+        # エラーが発生した場合
+        # ---------------------
+        except Exception as e:
+            message = f'{traceback.print_exc}'
+            if e:
+                message = e
+            self.printLog("FATAL", f'!!!!!===== Exception =====!!!!!')
+            self.printLog("FATAL", f'{message}')
+            return None
+
     # ====================================================================== #
     #  関数名: printLog
     # ---------------------------------------------------------------------- #
