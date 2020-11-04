@@ -99,7 +99,7 @@ class Rakudasu:
                 conn.close()
 
                 # ログ作業後処理
-                message = f"excute select SQL completed."
+                message = f'"select" completed.'
                 self.printLog("INFO", f"[ OK ] {message}")
 
                 return df
@@ -111,7 +111,7 @@ class Rakudasu:
             if e:
                 message = e
             self.printLog("FATAL", f'!!!!!===== Exception =====!!!!!')
-            self.printLog("FATAL", f'select: {message}')
+            self.printLog("FATAL", f'{message}')
             return 1
 
     # ====================================================================== #
@@ -150,7 +150,7 @@ class Rakudasu:
                     conn.close()
 
                 # ログ作業後処理
-                message = f"INSERT completed."
+                message = f'"insert" completed.'
                 self.printLog("INFO", f"[ OK ] {message}")
 
                 return 0
@@ -162,7 +162,7 @@ class Rakudasu:
             if e:
                 message = e
             self.printLog("FATAL", f'!!!!!===== Exception =====!!!!!')
-            self.printLog("FATAL", f'INSERT: {message}')
+            self.printLog("FATAL", f'{message}')
             return 1
 
     # ====================================================================== #
@@ -183,13 +183,10 @@ class Rakudasu:
             if len(df) == 1:
                 self.user_name = df.at[0, 'name']
             if len(df) == 0:
-                self.printLog("INFO", f'[ NG ] User not found.')
-                raise Exception(f'ID {self.employee_id} User not found.')
+                raise Exception(f'User of ID {self.employee_id} not found.')
 
             # ログ作業後処理
-            message = f'user Name: "{self.user_name}"'
-            self.printLog("INFO", f"[ OK ] {message}")
-            message = f"get User Info completed."
+            message = f'"get_userInfo" completed.'
             self.printLog("INFO", f"[ OK ] {message}")
 
             return 0
@@ -201,7 +198,45 @@ class Rakudasu:
             if e:
                 message = e
             self.printLog("FATAL", f'!!!!!===== Exception =====!!!!!')
-            self.printLog("FATAL", f'get_userInfo: {message}')
+            self.printLog("FATAL", f'{message}')
+            return 1
+
+    # ====================================================================== #
+    #  関数名: check_info
+    # ---------------------------------------------------------------------- #
+    #  説明: 取得した名前と登録情報が一致しているかチェック（社員かどうか）
+    #  返り値: int
+    # ====================================================================== #
+    def check_info(self, fullname):
+        self.def_name = "check_info"
+        description = f'Processing of "{self.def_name}" function is started.'
+        self.printLog("INFO", f'[ OK ] {description}')
+
+        # メインコード
+        try:
+            if self.user_name == fullname:
+                # ログ作業後処理
+                message = f"The registration information matched with fullname ({fullname})."
+                self.printLog("INFO", f"[ OK ] {message}")
+
+            else:
+                raise Exception(f'The registration information did not match with fullname ({fullname}).')
+                return 1
+
+            # ログ作業後処理
+            message = f'"check_info" completed.'
+            self.printLog("INFO", f"[ OK ] {message}")
+
+            return 0
+        # ---------------------
+        # エラーが発生した場合
+        # ---------------------
+        except Exception as e:
+            message = f'{traceback.print_exc}'
+            if e:
+                message = e
+            self.printLog("FATAL", f'!!!!!===== Exception =====!!!!!')
+            self.printLog("FATAL", f'{message}')
             return 1
 
     # ====================================================================== #
@@ -223,9 +258,7 @@ class Rakudasu:
                 self.latestAttendanceId = df.at[0, 'id']
 
             # ログ作業後処理
-            message = f'attendance ID: "{self.latestAttendanceId}"'
-            self.printLog("INFO", f"[ OK ] {message}")
-            message = f"get latest attendance ID completed."
+            message = f'"get_latestAttendanceId" completed.'
             self.printLog("INFO", f"[ OK ] {message}")
 
             return 0
@@ -237,7 +270,7 @@ class Rakudasu:
             if e:
                 message = e
             self.printLog("FATAL", f'!!!!!===== Exception =====!!!!!')
-            self.printLog("FATAL", f'get_latestAttendanceId: {message}')
+            self.printLog("FATAL", f'{message}')
             return 1
 
     # ====================================================================== #
@@ -263,9 +296,7 @@ class Rakudasu:
             self.working_hours = working_hours - b_time
 
             # ログ作業後処理
-            message = f'working hours: "{self.working_hours}"'
-            self.printLog("INFO", f"[ OK ] {message}")
-            message = f"calculate working hours completed."
+            message = f'"calculate_working_hours" completed.'
             self.printLog("INFO", f"[ OK ] {message}")
 
             return 0
@@ -277,7 +308,7 @@ class Rakudasu:
             if e:
                 message = e
             self.printLog("FATAL", f'!!!!!===== Exception =====!!!!!')
-            self.printLog("FATAL", f'calculate_working_hours: {message}')
+            self.printLog("FATAL", f'{message}')
             return 1
 
     # ====================================================================== #
@@ -326,7 +357,7 @@ class Rakudasu:
             df = self.insert(sql)
 
             # ログ作業後処理
-            message = f"INSERT completed."
+            message = f'"commit_data" completed.'
             self.printLog("INFO", f"[ OK ] {message}")
 
             print('-'*60)
@@ -348,7 +379,7 @@ class Rakudasu:
             if e:
                 message = e
             self.printLog("FATAL", f'!!!!!===== Exception =====!!!!!')
-            self.printLog("FATAL", f'commit_data: {message}')
+            self.printLog("FATAL", f'{message}')
             return 1
     # ====================================================================== #
     #  関数名: printLog
