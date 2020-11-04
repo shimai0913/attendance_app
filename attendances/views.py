@@ -33,6 +33,8 @@ class AttendanceList(generics.ListCreateAPIView):
     def list(self, request):
         # Note the use of `get_queryset()` instead of `self.queryset`
         employee_id = request.user.get_employee_id()
+        user_fullname = request.user.get_full_name()
+        print('fullName: ', user_fullname)
         if employee_id:
             queryset = self.get_queryset().filter(employee_id=employee_id)
             serializer = AttendanceSerializer(queryset, many=True)
@@ -48,36 +50,46 @@ class AttendanceList(generics.ListCreateAPIView):
         print('-'*60, 'POST request.','-'*60)
         employee_id = request.user.get_employee_id()
         if employee_id:
+            to_RAKUDASU_flag = False
             # ========================================================================== #
             #  本家RAKUDASUに対する処理
             # ========================================================================== #
             try:
                 rakudasu = rakudasu_db.Rakudasu(request)
+                user_fullname = request.user.get_full_name()
                 assert not rakudasu.get_userInfo()
+                assert not rakudasu.check_info(user_fullname)
                 assert not rakudasu.get_latestAttendanceId()
                 assert not rakudasu.calculate_working_hours()
                 assert not rakudasu.commit_data()
+                to_RAKUDASU_flag = True
             except Exception as e:
-                print(e)
+                pass
             # ========================================================================== #
             #  Django Modelに対する処理
             # ========================================================================== #
-            request_data = dict(request.data)
-            request_data['employee_id'] = employee_id
-            serializer = self.get_serializer(data=request_data)
-            if serializer.is_valid():
-                self.object = serializer.save()
-                headers = self.get_success_headers(serializer.data)
-                return Response({
-                    'result': 'Successed',
-                    'message': 'Registration to the RAKUDASU is complete.',
-                    'data': serializer.data
-                }, status=200, headers=headers)
+            if to_RAKUDASU_flag:
+                request_data = dict(request.data)
+                request_data['employee_id'] = employee_id
+                serializer = self.get_serializer(data=request_data)
+                if serializer.is_valid():
+                    self.object = serializer.save()
+                    headers = self.get_success_headers(serializer.data)
+                    return Response({
+                        'result': 'Successed',
+                        'message': 'Registration to the RAKUDASU and Django models are complete.',
+                        'data': serializer.data
+                    }, status=200, headers=headers)
+                else:
+                    return Response({
+                        'result': 'Failed',
+                        'message': 'Registration to RAKUDASU failed.',
+                        'reason': serializer.errors
+                    }, status=400)
             else:
                 return Response({
                     'result': 'Failed',
-                    'message': 'Registration to RAKUDASU failed.',
-                    'reason': serializer.errors
+                    'message': 'Your fullname is not registered. Please try after registering your first name and last name.',
                 }, status=400)
         # ---------------------
         # employee_id 未登録
