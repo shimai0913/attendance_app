@@ -112,12 +112,24 @@ class AttendanceDetail(generics.RetrieveUpdateDestroyAPIView):
 
     # PUT
     def update(self, request, pk):
-        request_data = request.data
-        request_data['user_id'] = request.user.id
         try:
             instance = self.get_object()
-            serializer = self.get_serializer(instance, data=request_data)
+            serializer = self.get_serializer(instance, data=request.data)
             serializer.is_valid(raise_exception=True)
+            print('-'*100)
+            # ========================================================================== #
+            #  本家RAKUDASUに対する処理
+            # ========================================================================== #
+            rakudasu = rakudasu_db.Rakudasu(request)
+            assert not rakudasu.get_userInfo(), 'Failed to get user information with this employee ID.'
+            user_fullname = request.user.get_full_name()
+            assert not rakudasu.check_info(user_fullname), 'This name did not match. Please check your registration information.'
+            assert not rakudasu.calculate_working_hours(), 'Failed to calculate working hours.'
+            assert not rakudasu.update_commit_data(), 'Failed to commit request data.'
+
+            # ========================================================================== #
+            #  Django Modelに対する処理
+            # ========================================================================== #
             self.perform_update(serializer)
             return Response({
                 'result': 'Successed',
@@ -140,15 +152,27 @@ class AttendanceDetail(generics.RetrieveUpdateDestroyAPIView):
         try:
             instance = self.get_object()
             serializer = self.get_serializer(instance)
-            self.perform_destroy(instance)
-            return Response({
-                'result': 'Successed',
-                'message': 'The deletion of attendance information has been completed.',
-                'data': serializer.data
-            }, status=200)
+            # ========================================================================== #
+            #  本家RAKUDASUに対する処理
+            # ========================================================================== #
+            rakudasu = rakudasu_db.Rakudasu(request, instance.attendance_details_id)
+            assert not rakudasu.get_userInfo(), 'Failed to get user information with this employee ID.'
+            user_fullname = request.user.get_full_name()
+            assert not rakudasu.check_info(user_fullname), 'This name did not match. Please check your registration information.'
+            assert not rakudasu.delete_commit_data(), 'Failed to delete data.'
         except:
             return Response({
                 'result': 'Failed',
                 'message': 'Failed to delete attendance information.',
                 'data': serializer.data
             }, status=400)
+        else:
+            # ========================================================================== #
+            #  Django Modelに対する処理
+            # ========================================================================== #
+            self.perform_destroy(instance)
+            return Response({
+                'result': 'Successed',
+                'message': 'The deletion of attendance information has been completed.',
+                'data': serializer.data
+            }, status=200)

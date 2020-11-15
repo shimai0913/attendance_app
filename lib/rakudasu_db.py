@@ -57,15 +57,20 @@ work_type_Map = {
 #  引数1       dict(コマンドライン引数)
 # -------------------------------------------------------------------------- #
 class Rakudasu:
-    def __init__(self, request):
+    def __init__(self, request, pk=None):
         self.def_name = "init"
         request_data = dict(request.data)
         self.employee_id = request.user.get_employee_id()
-        self.work_type = work_type_Map[request_data['work_type']]
-        self.opening_time = request_data['opening_time']
-        self.closing_time = request_data['closing_time']
-        self.break_time = request_data['break_time']
-        self.date = request_data['date'] + ' 00:00:00'
+        if request.method == "POST" or request.method == "PUT" or request.method == "PATCH":
+            self.work_type = work_type_Map[request_data['work_type']]
+            self.opening_time = request_data['opening_time']
+            self.closing_time = request_data['closing_time']
+            self.break_time = request_data['break_time']
+            self.date = request_data['date'] + ' 00:00:00'
+        if request.method == "PUT" or request.method == "PATCH" :
+            self.attendance_details_id = request_data['attendance_details_id']
+        if request.method == "DELETE":
+            self.attendance_details_id = pk
 
     # ====================================================================== #
     #  関数名: select
@@ -152,6 +157,57 @@ class Rakudasu:
 
                 # ログ作業後処理
                 message = f'"insert" completed.'
+                self.printLog("INFO", f"[ OK ] {message}")
+
+                return 0
+        # ---------------------
+        # エラーが発生した場合
+        # ---------------------
+        except Exception as e:
+            message = f'{traceback.print_exc}'
+            if e:
+                message = e
+            self.printLog("FATAL", f'!!!!!===== Exception =====!!!!!')
+            self.printLog("FATAL", f'{message}')
+            return 1
+
+    # ====================================================================== #
+    #  関数名: excute
+    # ---------------------------------------------------------------------- #
+    #  説明: DBに接続し、SQL文を実行
+    #  返り値: int
+    # ====================================================================== #
+    def excute(self, q):
+        self.def_name = "excute"
+        description = f'Processing of "{self.def_name}" function is started.'
+        self.printLog("INFO", f'[ OK ] {description}')
+
+        # メインコード
+        try:
+            with SSHTunnelForwarder(
+                (SSH_BASTION_ADDRESS, SSH_PORT),
+                ssh_pkey=SSH_PKEY_PATH,
+                ssh_username=SSH_USER,
+                remote_bind_address=(MYSQL_HOST, MYSQL_PORT),
+                # local_bind_address=(MYSQL_HOST, MYSQL_PORT),
+            ) as server:
+                conn = pymysql.connect(
+                    host = MYSQL_HOST,
+                    port = server.local_bind_port,
+                    user = MYSQL_USER,
+                    passwd = MYSQL_PASS,
+                    db = MYSQL_DB,
+                    charset = 'utf8',
+                    cursorclass = pymysql.cursors.DictCursor
+                )
+                with conn.cursor() as cursor:
+                    cursor.execute(q)
+                    # オートコミットじゃないので、明示的にコミットを書く必要がある
+                    conn.commit()
+                    conn.close()
+
+                # ログ作業後処理
+                message = f'"excute" completed.'
                 self.printLog("INFO", f"[ OK ] {message}")
 
                 return 0
@@ -445,6 +501,83 @@ class Rakudasu:
             self.printLog("FATAL", f'!!!!!===== Exception =====!!!!!')
             self.printLog("FATAL", f'{message}')
             return None
+
+    # ====================================================================== #
+    #  関数名: update_commit_data
+    # ---------------------------------------------------------------------- #
+    #  説明: データ更新
+    #  返り値: int
+    # ====================================================================== #
+    def update_commit_data(self):
+        self.def_name = "update_commit_data"
+        description = f'Processing of "{self.def_name}" function is started.'
+        self.printLog("INFO", f'[ OK ] {description}')
+
+        # メインコード
+        try:
+            sql = f'''
+            update attendance_details set
+                work_type={self.work_type},
+                opening_time="{self.opening_time}",
+                closing_time="{self.closing_time}",
+                break_time="{self.break_time}",
+                working_hours="{self.working_hours}",
+                date="{self.date}"
+                where id={self.attendance_details_id}
+            ;'''
+
+            df = self.excute(sql)
+
+            # ログ作業後処理
+            message = f'"update_attendance_data" completed.'
+            self.printLog("INFO", f"[ OK ] {message}")
+
+            return 0
+        # ---------------------
+        # エラーが発生した場合
+        # ---------------------
+        except Exception as e:
+            message = f'{traceback.print_exc}'
+            if e:
+                message = e
+            self.printLog("FATAL", f'!!!!!===== Exception =====!!!!!')
+            self.printLog("FATAL", f'{message}')
+            return 1
+
+    # ====================================================================== #
+    #  関数名: delete_commit_data
+    # ---------------------------------------------------------------------- #
+    #  説明: データ更新
+    #  返り値: int
+    # ====================================================================== #
+    def delete_commit_data(self):
+        self.def_name = "delete_commit_data"
+        description = f'Processing of "{self.def_name}" function is started.'
+        self.printLog("INFO", f'[ OK ] {description}')
+
+        # メインコード
+        try:
+            sql = f'''
+            delete from attendance_details where id={self.attendance_details_id};
+            '''
+
+            df = self.excute(sql)
+
+            # ログ作業後処理
+            message = f'"delete_commit_data" completed.'
+            self.printLog("INFO", f"[ OK ] {message}")
+
+            return 0
+        # ---------------------
+        # エラーが発生した場合
+        # ---------------------
+        except Exception as e:
+            message = f'{traceback.print_exc}'
+            if e:
+                message = e
+            self.printLog("FATAL", f'!!!!!===== Exception =====!!!!!')
+            self.printLog("FATAL", f'{message}')
+            return 1
 
     # ====================================================================== #
     #  関数名: printLog
