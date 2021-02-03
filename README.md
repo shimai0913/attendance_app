@@ -1,4 +1,5 @@
 # attendance_app
+## 勤怠システムAPI (http://3.138.245.157:8000/)
 
 ## 仮想環境の作成
 ~~`python -m venv venv`~~
