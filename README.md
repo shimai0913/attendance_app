@@ -1,6 +1,8 @@
 # attendance_app
 ## 勤怠システムAPI (http://3.138.245.157:8000/)
 
+### Siri,LINE, モバイルアプリ、モバイルアプリ(開発中)と連携して使用
+
 ## 仮想環境の作成
 ~~`python -m venv venv`~~
 
