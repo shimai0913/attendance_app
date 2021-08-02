@@ -33,3 +33,5 @@
 ~~{% load staticfiles %}~~
 
 {% load static %}
+
+uwsgi --ini rakudasu_project_uwsgi.ini
